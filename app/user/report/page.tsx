@@ -14,15 +14,20 @@ export default function UserReport() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [lastSeen, setLastSeen] = useState('')
+  const [reporterName, setReporterName] = useState('')
+  const [reporterContact, setReporterContact] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Here you would typically send the report to your backend
+    
     toast("Report Submitted: Your report has been successfully submitted.")
     // Reset form
     setName('')
     setDescription('')
     setLastSeen('')
+    setReporterName('')
+    setReporterContact('')
   }
 
   return (
@@ -71,10 +76,29 @@ export default function UserReport() {
               required
             />
           </div>
-          <Button type="submit">Submit Report</Button>
+          <div className="mb-4">
+            <Label htmlFor="reporterName">Reporter Name</Label>
+            <Input
+              id="reporterName"
+              value={reporterName}
+              onChange={(e) => setReporterName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="reporterContact">Reporter Contact</Label>
+            <Input
+              id="reporterContact"
+              value={reporterContact}
+              onChange={(e) => setReporterContact(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" onClick={handleSubmit}>Submit Report</Button>
         </form>
       </main>
     </div>
   )
 }
+
 
