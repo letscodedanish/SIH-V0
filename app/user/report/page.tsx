@@ -10,24 +10,58 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { toast } from 'react-toastify'
 
 export default function UserReport() {
-  const [reportType, setReportType] = useState('person')
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
   const [lastSeen, setLastSeen] = useState('')
   const [reporterName, setReporterName] = useState('')
   const [reporterContact, setReporterContact] = useState('')
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [reportType, setReportType] = useState('person') // Default to 'person'
+  const [itemName, setItemName] = useState('')
+  const [photo, setPhoto] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically send the report to your backend
-    
-    toast("Report Submitted: Your report has been successfully submitted.")
-    // Reset form
-    setName('')
-    setDescription('')
-    setLastSeen('')
-    setReporterName('')
-    setReporterContact('')
+
+    const reportData = {
+      itemName,
+      reportType,
+      name,
+      description,
+      lastSeen,
+      reportedBy: reporterName,
+      photo,
+    }
+
+    try {
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Report submitted:', data)
+        toast("Report Submitted: Your report has been successfully submitted.")
+        // Reset form
+        setName('')
+        setDescription('')
+        setLastSeen('')
+        setReporterName('')
+        setReporterContact('')
+        setItemName('')
+        setPhoto('')
+        setReportType('person') // Reset to default
+      } else {
+        const errorData = await response.json()
+        toast(`Error: ${errorData.message}`)
+      }
+    } catch (error) {
+      console.error('Error submitting report:', error)
+      toast('Error submitting report')
+    }
   }
 
   return (
@@ -86,19 +120,18 @@ export default function UserReport() {
             />
           </div>
           <div className="mb-4">
-            <Label htmlFor="reporterContact">Reporter Contact</Label>
+            <Label htmlFor="reporterContact">Image</Label>
             <Input
+              type='file'
               id="reporterContact"
               value={reporterContact}
               onChange={(e) => setReporterContact(e.target.value)}
               required
             />
           </div>
-          <Button type="submit" onClick={handleSubmit}>Submit Report</Button>
+          <Button type="submit">Submit Report</Button>
         </form>
       </main>
     </div>
   )
 }
-
-
