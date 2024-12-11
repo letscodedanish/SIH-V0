@@ -69,7 +69,7 @@ export async function GET() {
 
     // Merge and return the results
     const reports = [
-      ...missingPersons.map((person) => ({
+      ...missingPersons.map((person: { id: string, name: string, description: string, lastSeen: string, reportedBy: string, photo: string }) => ({
         id: person.id,
         type: 'Person',
         name: person.name,
@@ -78,7 +78,7 @@ export async function GET() {
         reportedBy: person.reportedBy, // Example: Modify this based on your schema
         photo: person.photo,
       })),
-      ...missingItems.map((item) => ({
+      ...missingItems.map((item: { id: string, itemName: string, description: string, lastSeen: string, reportedBy: string, photo: string }) => ({
         id: item.id,
         type: 'Item',
         name: item.itemName,

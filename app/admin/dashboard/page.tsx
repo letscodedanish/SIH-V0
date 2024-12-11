@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   }
 
   const [reports, setReports] = useState<Report[]>([]);
+  const [hover, setHover] = useState(false)
 
   useEffect(() => {
     async function fetchReports() {
@@ -43,7 +44,27 @@ export default function AdminDashboard() {
     fetchReports();
   }, []);
   
-  
+  const handleAccess = () => {
+    fetch('http://127.0.0.1:5000/trigger-model', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'access_surveillance' }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          toast.success('Access granted to surveillance.');
+        } else {
+          toast.error('Failed to access surveillance.');
+        }
+      })
+      .catch(error => {
+        console.error('Error accessing surveillance:', error);
+        toast.error('Error accessing surveillance.');
+      });
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,8 +91,13 @@ export default function AdminDashboard() {
           <div className="bg-card text-card-foreground p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Real-Time Surveillance</h2>
             <p className="mb-4">Access live surveillance footage and face recognition alerts.</p>
-            <Button asChild variant="outline">
-              <Link href="/admin/surveillance">Access Surveillance</Link>
+            <Button asChild variant="outline" onClick={handleAccess} onMouseOver={() => setHover(true)}
+      onMouseOut={() => setHover(false)}
+      style={{
+        cursor: 'pointer',
+        backgroundColor: hover ? '#ddd' : '#fff', // Example of hover effect
+      }}>
+              <p >Access Surveillance</p>
             </Button>
           </div>
           <div className="bg-card text-card-foreground p-6 rounded-lg shadow-md">
