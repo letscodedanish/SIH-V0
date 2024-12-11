@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,20 +10,28 @@ import { toast } from 'react-toastify'
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Mock data for missing people and items
-const missingPeople = [
-  { id: 1, name: "John Doe", age: 30, lastSeen: "Main entrance", image: "/placeholder.svg", found: false },
-  { id: 2, name: "Jane Smith", age: 25, lastSeen: "Food court", image: "/placeholder.svg", found: true },
-]
-
-const missingItems = [
-  { id: 1, name: "Blue Backpack", description: "Contains important documents", lastSeen: "Near temple", image: "/placeholder.svg", found: false },
-  { id: 2, name: "Gold Watch", description: "Antique, high value", lastSeen: "Restroom area", image: "/placeholder.svg", found: true },
-]
-
 export default function AdminDashboard() {
   const [criminalName, setCriminalName] = useState('')
   const [criminalDescription, setCriminalDescription] = useState('')
+  interface Report {
+    id: string;
+    type: 'Person' | 'Item';
+    name: string;
+    photo: string;
+    lastSeen: string;
+    description?: string;
+  }
+
+  const [reports, setReports] = useState<Report[]>([])
+
+  useEffect(() => {
+    async function fetchReports() {
+      const response = await fetch('/api/reports')
+      const data = await response.json()
+      setReports(data)
+    }
+    fetchReports()
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,16 +100,13 @@ export default function AdminDashboard() {
           <div className="bg-card text-card-foreground p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Missing People</h2>
             <ul className="space-y-4">
-              {missingPeople.map((person) => (
+              {reports.filter(report => report.type === 'Person').map((person) => (
                 <li key={person.id} className="flex items-center space-x-4">
-                  <Image src={person.image} alt={person.name} width={50} height={50} className="rounded-full" />
+                  <Image src={person.photo} alt={person.name} width={50} height={50} className="rounded-full" />
                   <div>
                     <p className="font-semibold">{person.name}</p>
-                    <p className="text-sm text-muted-foreground">Age: {person.age}, Last seen: {person.lastSeen}</p>
+                    <p className="text-sm text-muted-foreground">Last seen: {person.lastSeen}</p>
                   </div>
-                  <span className={`ml-auto ${person.found ? 'text-green-500' : 'text-red-500'}`}>
-                    {person.found ? 'Found' : 'Missing'}
-                  </span>
                 </li>
               ))}
             </ul>
@@ -110,16 +115,13 @@ export default function AdminDashboard() {
           <div className="bg-card text-card-foreground p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Missing Items</h2>
             <ul className="space-y-4">
-              {missingItems.map((item) => (
+              {reports.filter(report => report.type === 'Item').map((item) => (
                 <li key={item.id} className="flex items-center space-x-4">
-                  <Image src={item.image} alt={item.name} width={50} height={50} className="rounded-full" />
+                  <Image src={item.photo} alt={item.name} width={50} height={50} className="rounded-full" />
                   <div>
                     <p className="font-semibold">{item.name}</p>
                     <p className="text-sm text-muted-foreground">{item.description}, Last seen: {item.lastSeen}</p>
                   </div>
-                  <span className={`ml-auto ${item.found ? 'text-green-500' : 'text-red-500'}`}>
-                    {item.found ? 'Found' : 'Missing'}
-                  </span>
                 </li>
               ))}
             </ul>
@@ -129,4 +131,3 @@ export default function AdminDashboard() {
     </div>
   )
 }
-

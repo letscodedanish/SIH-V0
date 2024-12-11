@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { toast } from 'react-toastify'
+import Image from 'next/image'
 import {
   Table,
   TableBody,
@@ -18,27 +19,72 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-// Mock data for reports
-const mockReports = [
-  { id: 1, type: 'Person', name: 'John Doe', description: 'Male, 30 years old, wearing red shirt', lastSeen: 'Near main entrance', status: 'Open' },
-  { id: 2, type: 'Item', name: 'Blue Backpack', description: 'Contains important documents', lastSeen: 'Food court area', status: 'Found' },
-  { id: 3, type: 'Person', name: 'Jane Smith', description: 'Female, 25 years old, wearing blue jeans and white t-shirt', lastSeen: 'Near the temple', status: 'Open' },
-]
-
 export default function AdminReports() {
+  interface Report {
+    id: string;
+    type: string;
+    name: string;
+    lastSeen: string;
+    description: string;
+    photo: string;
+    reportedBy: string;
+  }
+
+  const [reports, setReports] = useState<Report[]>([])
   const [reportType, setReportType] = useState('person')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [lastSeen, setLastSeen] = useState('')
+  const [photo, setPhoto] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch reports from backend
+  useEffect(() => {
+    async function fetchReports() {
+      try {
+        const response = await fetch('/api/reports', { method: 'GET' })
+        if (!response.ok) throw new Error('Failed to fetch reports')
+        const data = await response.json()
+        setReports(data)
+      } catch (error) {
+        console.error('Error fetching reports:', error)
+        toast.error('Error fetching reports')
+      }
+    }
+    fetchReports()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically send the report to your backend
-    toast("Report Added: The new report has been successfully added.")
-    // Reset form
-    setName('')
-    setDescription('')
-    setLastSeen('')
+    try {
+      const payload = {
+        reportType,
+        name: reportType === 'person' ? name : undefined,
+        itemName: reportType === 'item' ? name : undefined,
+        description,
+        lastSeen,
+        reportedBy: 'Admin', // Example value
+        photo: photo,
+      }
+
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) throw new Error('Failed to submit report')
+
+      const newReport = await response.json()
+      toast.success('Report Added')
+      setReports((prev) => [...prev, newReport.report]) // Update local state
+      setName('')
+      setDescription('')
+      setLastSeen('')
+      setPhoto('')
+    } catch (error) {
+      console.error('Error submitting report:', error)
+      toast.error('Error submitting report')
+    }
   }
 
   return (
@@ -90,6 +136,16 @@ export default function AdminReports() {
                 required
               />
             </div>
+            <div>
+              <Label htmlFor="photo">Photo</Label>
+              <Input
+                type='file'
+                id="photo"
+                value={photo}
+                onChange={(e) => setPhoto(e.target.value)}
+                required
+              />
+            </div>
             <Button type="submit">Add Report</Button>
           </form>
         </div>
@@ -104,20 +160,22 @@ export default function AdminReports() {
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Last Seen</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
+                <TableHead>Reported By</TableHead>
+                <TableHead>Photo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockReports.map((report) => (
+              {reports.map((report) => (
                 <TableRow key={report.id}>
                   <TableCell>{report.type}</TableCell>
-                  <TableCell>{report.name}</TableCell>
+                  <TableCell>{report.type === 'Item'? report.name: report.name}</TableCell>
                   <TableCell>{report.description}</TableCell>
                   <TableCell>{report.lastSeen}</TableCell>
-                  <TableCell>{report.status}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">Update</Button>
+                    {report.reportedBy}
+                  </TableCell>
+                  <TableCell>
+                    <Image src={report.photo} width={100} height={100} alt={`Photo of ${report.name}`} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -128,4 +186,3 @@ export default function AdminReports() {
     </div>
   )
 }
-
