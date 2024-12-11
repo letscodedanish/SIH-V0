@@ -22,16 +22,28 @@ export default function AdminDashboard() {
     description?: string;
   }
 
-  const [reports, setReports] = useState<Report[]>([])
+  const [reports, setReports] = useState<Report[]>([]);
 
   useEffect(() => {
     async function fetchReports() {
-      const response = await fetch('/api/reports')
-      const data = await response.json()
-      setReports(data)
+      try {
+        const response = await fetch('/api/reports');
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setReports(data);
+          localStorage.setItem('cachedReports', JSON.stringify(data));
+          localStorage.setItem('cacheTime', Date.now().toString());
+        } else {
+          console.error('Unexpected API response format', data);
+        }
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      }
     }
-    fetchReports()
-  }, [])
+    fetchReports();
+  }, []);
+  
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,7 +114,7 @@ export default function AdminDashboard() {
             <ul className="space-y-4">
               {reports.filter(report => report.type === 'Person').map((person) => (
                 <li key={person.id} className="flex items-center space-x-4">
-                  <Image src={person.photo} alt={person.name} width={50} height={50} className="rounded-full" />
+                  <Image src={`https://my-sih-rekognition-images.s3.ap-south-1.amazonaws.com/${person.name}.jpg`} alt={person.name} width={150} height={150} className="rounded-md" />
                   <div>
                     <p className="font-semibold">{person.name}</p>
                     <p className="text-sm text-muted-foreground">Last seen: {person.lastSeen}</p>
@@ -117,7 +129,7 @@ export default function AdminDashboard() {
             <ul className="space-y-4">
               {reports.filter(report => report.type === 'Item').map((item) => (
                 <li key={item.id} className="flex items-center space-x-4">
-                  <Image src={item.photo} alt={item.name} width={50} height={50} className="rounded-full" />
+                  <Image src={item.photo} alt={item.name} width={150} height={150} className="rounded-md" />
                   <div>
                     <p className="font-semibold">{item.name}</p>
                     <p className="text-sm text-muted-foreground">{item.description}, Last seen: {item.lastSeen}</p>
