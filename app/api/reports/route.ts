@@ -1,31 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import AWS from 'aws-sdk'
 
 const prisma = new PrismaClient()
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-})
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { itemName, reportType, name, description, lastSeen, reportedBy, photo } = body
+    const { itemName, reportType, name, description, lastSeen, reportedBy } = body
 
-    // Upload photo to S3
-    const photoBuffer = Buffer.from(photo, 'base64')
-    const s3Params = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME || '',
-      Key: `${Date.now()}_${reportType}.jpg`,
-      Body: photoBuffer,
-      ContentEncoding: 'base64',
-      ContentType: 'image/jpg',
-    }
-    const s3Response = await s3.upload(s3Params).promise()
-    const photoUrl = s3Response.Location
+    const photoUrl = `https://my-sih-rekognition-images.s3.ap-south-1.amazonaws.com/${name}.jpg`
     console.log('Photo uploaded to S3:', photoUrl)
 
     let report
@@ -50,6 +33,16 @@ export async function POST(req: NextRequest) {
           photo: photoUrl,
         },
       })
+    } else if (reportType === 'criminal') {
+      report = await prisma.criminal.create({
+      data: {
+        name,
+        description,
+        lastSeen,
+        reportedBy,
+        photo: photoUrl,
+      },
+      })
     } else {
       return NextResponse.json({ message: 'Invalid report type' }, { status: 400 })
     }
@@ -69,7 +62,7 @@ export async function GET() {
 
     // Merge and return the results
     const reports = [
-      ...missingPersons.map((person: { id: string, name: string, description: string, lastSeen: string, reportedBy: string, photo: string }) => ({
+      ...missingPersons.map((person: any) => ({
         id: person.id,
         type: 'Person',
         name: person.name,
@@ -77,8 +70,9 @@ export async function GET() {
         lastSeen: person.lastSeen,
         reportedBy: person.reportedBy, // Example: Modify this based on your schema
         photo: person.photo,
+        status: person.status
       })),
-      ...missingItems.map((item: { id: string, itemName: string, description: string, lastSeen: string, reportedBy: string, photo: string }) => ({
+      ...missingItems.map((item: any) => ({
         id: item.id,
         type: 'Item',
         name: item.itemName,
@@ -86,7 +80,17 @@ export async function GET() {
         lastSeen: item.lastSeen,
         reportedBy: item.reportedBy, // Example: Modify this based on your schema
         photo: item.photo,
+        status: item.status
       })),
+    ...await prisma.criminal.findMany().then((criminals: any[]) => criminals.map((criminal) => ({
+      id: criminal.id,
+      type: 'Criminal',
+      name: criminal.name,
+      description: criminal.description,
+      lastSeen: criminal.lastSeen,
+      reportedBy: criminal.reportedBy,
+      photo: criminal.photo,
+    }))),
     ]
 
     return NextResponse.json(reports, { status: 200 })

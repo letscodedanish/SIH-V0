@@ -16,6 +16,7 @@ model MissingPerson {
   photo       String?  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  status      String   @default("missing")
 }
 
 model MissingItem {
@@ -27,6 +28,8 @@ model MissingItem {
   photo       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  status      String   @default("missing")
+
 }
 
 model Criminal {
