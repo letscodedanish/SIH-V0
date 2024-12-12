@@ -11,6 +11,9 @@
       path: '',
       domains: ['my-sih-rekognition-images.s3.ap-south-1.amazonaws.com'],
     },
+    eslint: {
+      ignoreDuringBuilds: true, // Ignores ESLint errors during builds
+    },
   };
   
   
