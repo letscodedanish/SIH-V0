@@ -64,6 +64,7 @@ export default function AdminReports() {
         lastSeen,
         reportedBy: 'Admin', // Example value
         photo: photo,
+        status: "missing",
       }
 
       const response = await fetch('/api/reports', {
