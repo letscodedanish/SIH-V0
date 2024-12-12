@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Header } from "@/components/header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "react-toastify";
-import Link from "next/link";
-import Image from "next/image";
 
 export default function AdminDashboard() {
   const [criminalName, setCriminalName] = useState("");
